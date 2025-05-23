@@ -7,10 +7,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useContext, useState } from "react";
 import colors from "../../data/styling/colors";
+import { login } from "../../api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { router } from "expo-router";
+import UserInfo from "../../types/UserInfo";
+import AuthContext from "../../context/AuthContext";
 
-const Index = () => {
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { setIsAuthenticated } = useContext(AuthContext);
+
+  const { mutate: loginUser, isPending } = useMutation({
+    mutationFn: (userInfo: UserInfo) => login(userInfo),
+    onSuccess: () => {
+      setIsAuthenticated(true);
+      router.push("/(tabs)");
+    },
+  });
+
+  const handleLogin = () => {
+    loginUser({ email, password });
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -38,6 +59,10 @@ const Index = () => {
               marginTop: 20,
             }}
             placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
 
           <TextInput
@@ -48,6 +73,9 @@ const Index = () => {
               marginTop: 20,
             }}
             placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
           />
 
           <TouchableOpacity
@@ -57,8 +85,10 @@ const Index = () => {
               borderRadius: 5,
               marginTop: 20,
               alignItems: "center",
+              opacity: isPending ? 0.7 : 1,
             }}
-            onPress={() => {}}
+            onPress={handleLogin}
+            disabled={isPending}
           >
             <Text
               style={{
@@ -67,22 +97,27 @@ const Index = () => {
                 fontSize: 16,
               }}
             >
-              Login
+              {isPending ? "Logging in..." : "Login"}
             </Text>
           </TouchableOpacity>
 
-          <Text style={{ color: colors.white, fontSize: 16 }}>
-            Don't have an account?{" "}
-            <Text style={{ color: colors.white, fontWeight: "bold" }}>
-              Register
+          <TouchableOpacity
+            style={{ marginTop: 20, alignItems: "center" }}
+            onPress={() => router.push("/register")}
+          >
+            <Text style={{ color: colors.white, fontSize: 16 }}>
+              Don't have an account?{" "}
+              <Text style={{ color: colors.white, fontWeight: "bold" }}>
+                Register
+              </Text>
             </Text>
-          </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-export default Index;
+export default Login;
 
 const styles = StyleSheet.create({});
